@@ -50,9 +50,10 @@ class FeatureExtractor:
         return ImageFeature(keypoints=keypoints, descriptors=descriptors)
     
 class BFMatcherConfig:
-    def __init__(self, norm_type: int = cv.NORM_L2, cross_check: bool = True):
+    def __init__(self, norm_type: int = cv.NORM_L2, cross_check: bool = True, knn: bool = False):
         self.norm_type = norm_type
         self.cross_check = cross_check
+        self.knn = knn
 
 class FLANNMatcherConfig:
     def __init__(self, algorithm: int = 1, trees: int = 5, checks: int = 50):
@@ -63,8 +64,12 @@ class FLANNMatcherConfig:
 class MatcherConfig:
     def __init__(self, bf: BFMatcherConfig = None, flann: FLANNMatcherConfig = None):
         if bf is not None:
-            self.matcher_type = 'BF'
-            self.matcher_config = bf
+            if bf.knn:
+                self.matcher_type = 'BF-KNN'
+            else:
+                self.matcher_type = 'BF'
+                self.matcher_config = bf
+
         elif flann is not None:
             self.matcher_type = 'FLANN'
             self.matcher_config = flann 
@@ -75,7 +80,9 @@ class FeatureMatcher:
     def __init__(self, config: MatcherConfig):
         self.config = config
         if self.config.matcher_type == 'BF':
-            self.matcher = cv.BFMatcher() #self.config.matcher_config.norm_type, crossCheck=self.config.matcher_config.cross_check
+            self.matcher = cv.BFMatcher(crossCheck=self.config.matcher_config.cross_check, normType=self.config.matcher_config.norm_type) 
+        elif self.config.matcher_type == 'BF-KNN':
+            self.matcher = cv.BFMatcher()
         elif self.config.matcher_type == 'FLANN':
             index_params = dict(algorithm=self.config.flann.algorithm, trees=self.config.flann.trees)
             search_params = dict(checks=self.config.flann.checks)
@@ -95,12 +102,16 @@ class FeatureMatcher:
         if features1.descriptors is None or features2.descriptors is None:
             raise ValueError("Descriptors cannot be None for matching.")
         
-        matches = self.matcher.knnMatch(features1.descriptors, features2.descriptors, k=2)
-        # matches = sorted(matches, key=lambda x: x.distance)
+        if self.config.matcher_type == 'BF-KNN':
+            matches = self.matcher.knnMatch(features1.descriptors, features2.descriptors, k=2)
+
+        elif self.config.matcher_type == 'BF':
+            matches = self.matcher.match(features1.descriptors, features2.descriptors)
+            matches = sorted(matches, key=lambda x: x.distance)
 
         return matches
    
-    def filter_matches(self, matches, features1: ImageFeature, features2: ImageFeature, ratio: float = 0.75):
+    def filter_lowe_matches(self, matches, features1: ImageFeature, features2: ImageFeature, ratio: float = 0.75):
         """
         Filters matches using Lowe's ratio test.
 
@@ -111,6 +122,9 @@ class FeatureMatcher:
 
         :return: List of valid matches and corresponding keypoints from both images.
         """
+        if self.config.matcher_type != 'BF-KNN':
+            raise ValueError("Lowe's ratio test cannot be applied to matches not done by a 2 kernel KNN.")
+        
         valid_matches = []
         keypoints1 = []
         keypoints2 = []
