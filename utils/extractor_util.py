@@ -75,7 +75,7 @@ class FeatureMatcher:
     def __init__(self, config: MatcherConfig):
         self.config = config
         if self.config.matcher_type == 'BF':
-            self.matcher = cv.BFMatcher(self.config.matcher_config.norm_type, crossCheck=self.config.matcher_config.cross_check)
+            self.matcher = cv.BFMatcher() #self.config.matcher_config.norm_type, crossCheck=self.config.matcher_config.cross_check
         elif self.config.matcher_type == 'FLANN':
             index_params = dict(algorithm=self.config.flann.algorithm, trees=self.config.flann.trees)
             search_params = dict(checks=self.config.flann.checks)
@@ -95,8 +95,8 @@ class FeatureMatcher:
         if features1.descriptors is None or features2.descriptors is None:
             raise ValueError("Descriptors cannot be None for matching.")
         
-        matches = self.matcher.match(features1.descriptors, features2.descriptors)
-        matches = sorted(matches, key=lambda x: x.distance)
+        matches = self.matcher.knnMatch(features1.descriptors, features2.descriptors, k=2)
+        # matches = sorted(matches, key=lambda x: x.distance)
 
         return matches
    
