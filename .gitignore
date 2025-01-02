@@ -2,4 +2,4 @@ data/external/*
 !data/internal
 __pycache__/
 *.pyc
-.DS_Store
+.DS_Stored
