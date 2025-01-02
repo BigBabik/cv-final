@@ -95,7 +95,7 @@ class FeatureMatcher:
         if features1.descriptors is None or features2.descriptors is None:
             raise ValueError("Descriptors cannot be None for matching.")
         
-        matches = self.matcher.knnMatch(features1.descriptors, features2.descriptors, k=2)
+        matches = self.matcher.match(features1.descriptors, features2.descriptors)
         matches = sorted(matches, key=lambda x: x.distance)
 
         return matches
