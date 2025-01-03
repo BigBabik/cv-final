@@ -24,18 +24,24 @@ class DatasetLoader:
         self.root = Path(root_dir)
         self.train_dir = self.root / 'train'
         self.test_dir = self.root / 'external/test_images'
+        self.scenes_data = field(default_factory=dict)
     
     def load_scene(self, scene_name: str) -> SceneData:
         scene_dir = self.train_dir / scene_name
-        return SceneData(
+
+        scene_data = SceneData(
             images_dir=scene_dir / 'images',
             calibration=pd.read_csv(scene_dir / 'calibration.csv', index_col=0),
             covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0),
         )
+
+        self.scenes_data[scene_name] = scene_data
+        return scene_data
     
     def get_all_scenes(self) -> List[str]:
         return [d.name for d in self.train_dir.iterdir() if d.is_dir()]
-    
+
     def load_all_scenes(self) -> Dict[str, SceneData]:
-        return {scene: self.load_scene(scene) 
-                for scene in self.get_all_scenes()}
+        self.scenes_data = {scene: self.load_scene(scene) 
+                            for scene in self.get_all_scenes()}
+        return self.scenes_data

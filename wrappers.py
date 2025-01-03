@@ -2,6 +2,7 @@ import os
 from utils import data_util as du, preproc_utils as pu, extractor_util as exu, estimator_util as esu
 from utils.data_util import ImageData, SceneData, DatasetLoader
 from utils.preproc_utils import ImagePreprocessor, PreprocessConfig
+from utils.extractor_util import FeatureExtractor, MatcherConfig, FeatureMatcher
 from typing import List
 import json
 
@@ -51,4 +52,16 @@ def preprocess_data(dataset: DatasetLoader, preprocessor: ImagePreprocessor, exc
             preprocessed_img = preprocessor.process_image(img)
             scene_data.image_data[image_name] = du.ImageData(image_name, img, preprocessed_img)
 
-    return train_data
+    return dataset
+
+def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
+    """
+    Extracts features from the preprocessed images in the dataset.
+    :param dataset: The dataset containing the preprocessed images and of course the scenes loaded.
+    """
+    for scene in dataset:
+        scene_data = dataset[scene]
+        for img in scene_data.image_data: 
+            scene_data.image_data[img].features = extractor.extract_features(scene_data.image_data[img].preproc_contents)  
+
+    return dataset
