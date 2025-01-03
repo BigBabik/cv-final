@@ -1,0 +1,31 @@
+{
+    "data_dir": "/Users/yoav/Documents/Yoav/CS/22928 - Intro to CV/cv-final/data/external",
+    "preprocess_config": {},
+    "extractor_config": {
+        "algorithm": "SIFT",
+        "sift_config": {
+            "nfeatures": 0,
+            "nOctaveLayers": 3,
+            "contrastThreshold": 0.04,
+            "edgeThreshold": 10,
+            "sigma": 1.6
+        }
+    },
+    "matcher_config": {
+        "algorithm": "BF-KNN",
+        "bf_knn_config": {
+            "k": 2
+        },
+        "bf_config": {
+            "normType": "NORM_L2",
+            "crossCheck": true
+        },
+        "flann_config": {
+            "algorithm": "KDTREE",
+            "trees": 5,
+            "checks": 50
+        }
+    }
+
+
+}

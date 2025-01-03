@@ -1,3 +1,8 @@
+General
+# what can I offload to the GPU
+
+Loading and preproc
+# wrapper functions for preprocessing the dataset
 
 Extraction
 # FeatureExtractorConfig to have a general parameter for the config and somehow indicate what algo is is so I can assign blindly,

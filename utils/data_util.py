@@ -1,15 +1,23 @@
 from pathlib import Path
 import pandas as pd
 from typing import Dict, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
+from utils import extractor_util as exu
+
+@dataclass
+class ImageData:
+    name: str
+    path: Path
+    preproc_contents: any = None
+    features: exu.ImageFeature = None
 
 @dataclass
 class SceneData:
     images_dir: Path
-    # image_files: List[str] = os.listdir(images_dir)
     calibration: pd.DataFrame
     covisibility: pd.DataFrame
+    image_data: Dict[str, ImageData] = field(default_factory=dict)
 
 class DatasetLoader:
     def __init__(self, root_dir: str):
@@ -22,7 +30,7 @@ class DatasetLoader:
         return SceneData(
             images_dir=scene_dir / 'images',
             calibration=pd.read_csv(scene_dir / 'calibration.csv', index_col=0),
-            covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0)
+            covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0),
         )
     
     def get_all_scenes(self) -> List[str]:
