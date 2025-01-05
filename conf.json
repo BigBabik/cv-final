@@ -25,7 +25,15 @@
             "trees": 5,
             "checks": 50
         }
-    }
+    },
+    "estimator_config": {
+        "algorithm": "RANSAC",
+        "ransac_config": {
+            "reprojThreshold": 3,
+            "maxIters": 2000,
+            "confidence": 0.99
+        }
+    },
 
 
 }

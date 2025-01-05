@@ -19,12 +19,15 @@ class SceneData:
     covisibility: pd.DataFrame
     image_data: Dict[str, ImageData] = field(default_factory=dict)
 
+@dataclass
 class DatasetLoader:
-    def __init__(self, root_dir: str):
-        self.root = Path(root_dir)
+    root_dir: str
+    scenes_data: Dict[str, SceneData] = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.root = Path(self.root_dir)
         self.train_dir = self.root / 'train'
         self.test_dir = self.root / 'external/test_images'
-        self.scenes_data = field(default_factory=dict)
     
     def load_scene(self, scene_name: str) -> SceneData:
         scene_dir = self.train_dir / scene_name
