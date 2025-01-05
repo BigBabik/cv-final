@@ -73,9 +73,9 @@ def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
 
 def pack_coords(coord_list: List):
     """
-    :param coord_list: listof KeyPoint objs
+    :param coord_list: list of lists of length 2 that are the normalized coords
     """
-    return ';'.join([str(p.pt) for p in coord_list])
+    return ';'.join([f"({x:.6f}, {y:.6f})" for x, y in coord_list])
 
 def unpack_coords(string_of_coords: str):
     points = string_of_coords.split(';')
@@ -91,7 +91,6 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
     for scene in dataset.scenes_data:
         scene_data = dataset.scenes_data[scene]
         print(f"Matching features for scene: {scene}")
-        print(scene_data.calibration.head())
         
         # Now filter
         valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
@@ -104,12 +103,11 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             matches = matcher.match_features(img1.features, img2.features)
             valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
 
-            k1n = normalize_keypoints(kp1, scene_data.calibration.loc[img1.name])
-            k2n = normalize_keypoints(kp2, scene_data.calibration.loc[img2.name])
+            k1n = normalize_keypoints([p.pt for p in kp1], scene_data.calibration.loc[img1.name].camera_intrinsics)
+            k2n = normalize_keypoints([p.pt for p in kp2], scene_data.calibration.loc[img2.name].camera_intrinsics)
 
             kp1_update = pack_coords(k1n)
             kp2_update = pack_coords(k2n)
-            #print(kp1_update, kp2_update)
             
             # Update one row at a time - IMPLEMENT BATCH UPDATE AND SAY IF UPDATING A NULL LIST - FAILED TO MATCH
             scene_data.covisibility.loc[index, 'keypoints1'] = kp1_update
@@ -140,7 +138,6 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
             kp1 = np.array(unpack_coords(row['keypoints1']))
             kp2 = np.array(unpack_coords(row['keypoints2']))
 
-            
             # Estimate the fundamental matrix
             estimator.keypoints1 = kp1
             estimator.keypoints2 = kp2
