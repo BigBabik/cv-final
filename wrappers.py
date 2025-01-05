@@ -3,13 +3,14 @@ from utils import data_util as du, preproc_utils as pu, extractor_util as exu, e
 from utils.data_util import ImageData, SceneData, DatasetLoader
 from utils.preproc_utils import ImagePreprocessor, PreprocessConfig
 from utils.extractor_util import FeatureExtractor, MatcherConfig, FeatureMatcher
+from utils.general_utils import *
 from typing import List
 import json
 import pandas as pd
 import numpy as np
 
 
-SUBMISSION_COLS = ['sample_id', 'fundamental_matrix']
+SUBMISSION_COLS = ['sample_id', 'fundamental_matrix', 'mask', 'inliers1', 'inliers2']
 
 
 def parse_config(config_file):
@@ -90,9 +91,11 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
     for scene in dataset.scenes_data:
         scene_data = dataset.scenes_data[scene]
         print(f"Matching features for scene: {scene}")
+        print(scene_data.calibration.head())
         
         # Now filter
         valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
+        print(f"There are {len(valid_pairs)} valid pairs to estimate for")
         
         for index, row in valid_pairs.iterrows():
             img1 = scene_data.image_data[row['im1']]  # Note: row[1] to access the Series
@@ -101,8 +104,11 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             matches = matcher.match_features(img1.features, img2.features)
             valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
 
-            kp1_update = pack_coords(kp1)
-            kp2_update = pack_coords(kp2)
+            k1n = normalize_keypoints(kp1, scene_data.calibration.loc[img1.name])
+            k2n = normalize_keypoints(kp2, scene_data.calibration.loc[img2.name])
+
+            kp1_update = pack_coords(k1n)
+            kp2_update = pack_coords(k2n)
             #print(kp1_update, kp2_update)
             
             # Update one row at a time - IMPLEMENT BATCH UPDATE AND SAY IF UPDATING A NULL LIST - FAILED TO MATCH
@@ -138,11 +144,14 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
             # Estimate the fundamental matrix
             estimator.keypoints1 = kp1
             estimator.keypoints2 = kp2
-            estimated_fund = estimator.estimate()
+            estimated_fund, mask = estimator.estimate()
+
+            inliers1 = estimator.keypoints1[estimator.mask.ravel() == 1]
+            inliers2 = estimator.keypoints2[estimator.mask.ravel() == 1]
 
             sample_id = f"{scene};{row['pair']}"
 
-            submissions_list.append([sample_id, estimated_fund])
+            submissions_list.append([sample_id, estimated_fund, mask, inliers1, inliers2])
 
         break
 

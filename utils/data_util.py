@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 from typing import Dict, List
 from dataclasses import dataclass, field
-import os
+import numpy as np
 from utils import extractor_util as exu
 
 @dataclass
@@ -19,6 +19,11 @@ class SceneData:
     covisibility: pd.DataFrame
     image_data: Dict[str, ImageData] = field(default_factory=dict)
 
+    def __post_init__(self):
+        self.calibration['camera_intrinsics'] = self.calibration.camera_intrinsics.apply(lambda k: np.array([float(v) for v in k.split(' ')]).reshape([3, 3]))
+        self.calibration['rotation_matrix'] = self.calibration.rotation_matrix.apply(lambda k: np.array([float(v) for v in k.split(' ')]).reshape([3, 3]))
+        self.calibration['translation_vector'] = self.calibration.translation_vector.apply(lambda k: np.array([float(v) for v in k.split(' ')]))
+
 @dataclass
 class DatasetLoader:
     root_dir: str
@@ -34,7 +39,7 @@ class DatasetLoader:
 
         scene_data = SceneData(
             images_dir=scene_dir / 'images',
-            calibration=pd.read_csv(scene_dir / 'calibration.csv', index_col=0),
+            calibration=pd.read_csv(scene_dir / 'calibration.csv', index_col=0).set_index('image_id'),
             covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0),
         )
 

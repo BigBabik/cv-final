@@ -64,7 +64,7 @@ class FundamentalMatrixEstimator:
             raise ValueError(f"Unsupported algorithm: {self.config.algorithm}")
         
         self.fundamental_matrix = self.fundamental_matrix.reshape(-1) # flatten it
-        return self.fundamental_matrix
+        return self.fundamental_matrix, self.mask
 
     def get_inliers(self):
         if self.fundamental_matrix is None or self.mask is None:
