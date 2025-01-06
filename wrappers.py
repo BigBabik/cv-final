@@ -1,13 +1,14 @@
-import os
+
 from utils import data_util as du, preproc_utils as pu, extractor_util as exu, estimator_util as esu
 from utils.data_util import ImageData, SceneData, DatasetLoader
 from utils.preproc_utils import ImagePreprocessor, PreprocessConfig
 from utils.extractor_util import FeatureExtractor, MatcherConfig, FeatureMatcher
-from utils.general_utils import *
 from typing import List
 import json
 import pandas as pd
 import numpy as np
+from utils import general_utils as gu
+from utils import evaluation_util as evu
 
 
 SUBMISSION_COLS = ['sample_id', 'fundamental_matrix', 'mask', 'inliers1', 'inliers2']
@@ -70,16 +71,6 @@ def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
             scene_data.image_data[img].features = extractor.extract_features(scene_data.image_data[img].preproc_contents)  
 
     return dataset
-
-def pack_coords(coord_list: List):
-    """
-    :param coord_list: list of lists of length 2 that are the normalized coords
-    """
-    return ';'.join([f"({x:.6f}, {y:.6f})" for x, y in coord_list])
-
-def unpack_coords(string_of_coords: str):
-    points = string_of_coords.split(';')
-    return ([eval(p) for p in points])
 
 
 def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility_threshold: float = 0.1):
@@ -154,3 +145,32 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
 
     return pd.DataFrame(submissions_list, columns=SUBMISSION_COLS)
 
+def get_camera_intrinsics_for_pair(sample_id, scene_data):
+    img1, img2 = sample_id.split(';')[-1].split('-')
+    K1 = scene_data.calibration.loc[img1].camera_intrinsics
+    K2 = scene_data.calibration.loc[img2].camera_intrinsics
+    return K1, K2
+
+def get_keypoints_for_pair(sample_id, scene_data):
+    i1, i2 = sample_id.split(';')[-1].split('-')
+    kp1, kp2 = scene_data.covisibility.loc['-'.join([i1, i2])][['keypoints1', 'keypoints2']]
+    kp1 = np.array(unpack_coords(kp1))
+    kp2 = np.array(unpack_coords(kp2))
+    return kp1, kp2
+
+
+def evaluate_results(dataset: DatasetLoader, results: pd.DataFrame) -> pd.DataFrame:
+    for scene in dataset.scenes_data: #find a better way to do this because I apply for all of the DF even with rows that aren't related
+        print(f"Evaluating for {scene}")
+        scene_data = dataset.scenes_data[scene]
+        rel_results = results[results['sample_id'].str.startswith(scene)]
+        if len(rel_results) == 0:
+            continue
+        rel_results[['K1', 'K2']] = rel_results['sample_id'].apply(lambda x: pd.Series(get_camera_intrinsics_for_pair(x, scene_data)))
+        rel_results[['kp1', 'kp2']] = rel_results['sample_id'].apply(lambda x: pd.Series(get_keypoints_for_pair(x, scene_data)))
+
+        rel_results[['E', 'R', 'T']] = rel_results.apply(lambda row: pd.Series(evu.compute_essential_matrix(np.array(row['fundamental_matrix']),
+                                                np.array(row['K1']), np.array(row['K2']), row['kp1'], row['kp2'])), axis=1)
+        
+        results.update(rel_results)
+    return results

@@ -7,17 +7,19 @@ eps = 1e-15
 
 
 def compute_essential_matrix(F, K1, K2, kp1, kp2):
-    '''Compute the Essential matrix from the Fundamental matrix, given the calibration matrices. Note that we ask participants to estimate F, i.e., without relying on known intrinsics.'''
+    '''
+    Compute the Essential matrix from the Fundamental matrix, given the calibration matrices.
+    Note that we ask participants to estimate F, i.e., without relying on known intrinsics.
 
-    assert F.shape[0] == 3, 'Malformed F?'
+    :param F: flattened estimated fundemental matrix
+    '''
 
-    E = np.matmul(np.matmul(K2.T, F), K1).astype(np.float64)
-    
-    kp1n = normalize_keypoints(kp1, K1)
-    kp2n = normalize_keypoints(kp2, K2)
-    num_inliers, R, T, mask = cv.recoverPose(E, kp1n, kp2n)
+    E = np.matmul(np.matmul(K2.T, F.reshape(3,3)), K1).astype(np.float64)
+
+    num_inliers, R, T, mask = cv.recoverPose(E, kp1, kp2)
 
     return E, R, T
+
 
 
 def compute_error_for_pair(q_gt, T_gt, q, T, scale):
