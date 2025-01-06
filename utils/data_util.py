@@ -40,7 +40,7 @@ class DatasetLoader:
         scene_data = SceneData(
             images_dir=scene_dir / 'images',
             calibration=pd.read_csv(scene_dir / 'calibration.csv', index_col=0).set_index('image_id'),
-            covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0),
+            covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0).set_index('pair'),
         )
 
         self.scenes_data[scene_name] = scene_data

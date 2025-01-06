@@ -2,7 +2,7 @@ General
 # what can I offload to the GPU
 
 Loading and preproc
-# fix the calibration DF while loading the dataset instead of in functions.
+# index_col and set_index dup in loading calibration and coves
 
 Extraction
 # FeatureExtractorConfig to have a general parameter for the config and somehow indicate what algo is is so I can assign blindly,
