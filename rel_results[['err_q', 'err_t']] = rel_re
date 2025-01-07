@@ -1,4 +1,0 @@
-        rel_results[['err_q', 'err_t']] = rel_results.apply(lambda row: 
-            evu.compute_error_for_pair(row['q_gt'], row['dT_gt'], row['q'], row['T'].iloc[0], scale), 
-            axis=1).head()
-        rel_results['maa'] = evu.compute_mean_average_acc(rel_results.err_q, rel_results.err_t, thresholds_q, thresholds_t)

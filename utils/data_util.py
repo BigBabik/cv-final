@@ -11,6 +11,7 @@ class ImageData:
     path: Path
     preproc_contents: any = None
     features: exu.ImageFeature = None
+    for_exp: int = 1
 
 @dataclass
 class SceneData:

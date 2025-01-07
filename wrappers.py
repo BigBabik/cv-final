@@ -7,6 +7,7 @@ from typing import List
 import json
 import pandas as pd
 import numpy as np
+import random
 #from utils import general_utils as gu
 from utils import evaluation_util as evu
  
@@ -52,6 +53,19 @@ def load_dataset(dataset_dir):
     :return: A DatasetLoader object containing the dataset.
     """
     return DatasetLoader(root_dir=dataset_dir)
+
+def sample_pairs_for_run(dataset: DatasetLoader, max_pairs_per_scene: int, covisibility_threshold: float = 0.1):
+    """
+    Called after preprocessing so dataset already has scenes_data populated
+    """
+    for scene in dataset.scenes_data:
+        scene_data = dataset.scenes_data[scene]
+        valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
+        print(f'[-] Processing scene "{scene}": found {len(valid_pairs)} pairs (will keep {min(len(valid_pairs), max_pairs_per_scene)})', flush=True)
+
+        random.shuffle(valid_pairs)
+        valid_pairs = valid_pairs[:max_pairs_per_scene]
+    
 
 def preprocess_data(dataset: DatasetLoader, preprocessor: ImagePreprocessor, exclude_scenes: List = []):
     """

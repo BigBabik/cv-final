@@ -1,6 +1,7 @@
 General
 # what can I offload to the GPU
 # mundane functions to some general utils module
+# decouple preproc and sampling for run
 
 Loading and preproc
 # index_col and set_index dup in loading calibration and coves
