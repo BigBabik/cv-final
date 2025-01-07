@@ -212,10 +212,16 @@ def evaluate_results(dataset: DatasetLoader, results: pd.DataFrame, scaling: pd.
             pd.Series(evu.compute_error_for_pair(row['q_gt'], row['dT_gt'], row['q'], row['T'], scale)), 
             axis=1)
 
+        maa, acc, acc_q, acc_t = evu.compute_mean_average_acc(rel_results.err_q, rel_results.err_t, thresholds_q, thresholds_t)
+
+        rel_results.loc[:, 'maa'] = maa
+        rel_results.loc[:, 'acc'] = [acc.tolist()] * len(rel_results)
+        rel_results.loc[:, 'acc_q'] = [acc_q.tolist()] * len(rel_results)
+        rel_results.loc[:, 'acc_t'] = [acc_t.tolist()] * len(rel_results)
 
         rel_list.append(rel_results)
 
     all_rel_results = pd.concat(rel_list, axis=0)
-    results = pd.concat([results, all_rel_results[['E', 'R', 'T', 'q', 'R1_gt', 'T1_gt', 'R2_gt', 'T2_gt', 'dR_gt', 'dT_gt', 'q_gt', 'err_q', 'err_t']]], axis=1)    
+    results = pd.concat([results, all_rel_results[['E', 'R', 'T', 'q', 'R1_gt', 'T1_gt', 'R2_gt', 'T2_gt', 'dR_gt', 'dT_gt', 'q_gt', 'err_q', 'err_t', 'maa', 'acc', 'acc_q', 'acc_t']]], axis=1)    
 
     return results
