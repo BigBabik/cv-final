@@ -209,8 +209,9 @@ def evaluate_results(dataset: DatasetLoader, results: pd.DataFrame, scaling: pd.
         rel_results['q_gt'] = rel_results['q_gt'].apply(lambda q_gt: q_gt / (np.linalg.norm(q_gt) + np.finfo(float).eps))
         
         rel_results[['err_q', 'err_t']] = rel_results.apply(lambda row: 
-            evu.compute_error_for_pair(row['q_gt'], row['dT_gt'], row['q'], row['T'], scale), 
-            axis=1).head()
+            pd.Series(evu.compute_error_for_pair(row['q_gt'], row['dT_gt'], row['q'], row['T'], scale)), 
+            axis=1)
+
 
         rel_list.append(rel_results)
 

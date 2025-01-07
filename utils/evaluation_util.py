@@ -40,7 +40,6 @@ def compute_error_for_pair(q_gt, T_gt, q, T, scale):
     err_t = min(np.linalg.norm(T_gt_scaled - T_scaled), np.linalg.norm(T_gt_scaled + T_scaled))
     err_q = (err_q * 180 / np.pi)
 
-    print(err_q, err_t)
     return err_q, err_t
 
 
