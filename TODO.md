@@ -1,5 +1,6 @@
 General
 # what can I offload to the GPU
+# mundane functions to some general utils module
 
 Loading and preproc
 # index_col and set_index dup in loading calibration and coves
@@ -20,3 +21,4 @@ Estimation
 # document the estimation configs and function to make sure I understand the parameters I'm feeding in 
 # dummy values for init or enable None for kp1,kp2
 # normalize points before estimation using the calibration data
+# understand why the evaluation DF has two T columns... For a patch I use T.iloc[0] to get only the first

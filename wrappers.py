@@ -7,12 +7,28 @@ from typing import List
 import json
 import pandas as pd
 import numpy as np
-from utils import general_utils as gu
+#from utils import general_utils as gu
 from utils import evaluation_util as evu
-
-
+ 
 SUBMISSION_COLS = ['sample_id', 'fundamental_matrix', 'mask', 'inliers1', 'inliers2']
 
+def normalize_keypoints(keypoints, K):
+    C_x = K[0, 2]
+    C_y = K[1, 2]
+    f_x = K[0, 0]
+    f_y = K[1, 1]
+    keypoints = (keypoints - np.array([[C_x, C_y]])) / np.array([[f_x, f_y]])
+    return keypoints
+
+def pack_coords(coord_list: List):
+    """
+    :param coord_list: list of lists of length 2 that are the normalized coords
+    """
+    return ';'.join([f"({x:.6f}, {y:.6f})" for x, y in coord_list])
+
+def unpack_coords(string_of_coords: str):
+    points = string_of_coords.split(';')
+    return ([eval(p) for p in points])
 
 def parse_config(config_file):
     """
@@ -137,7 +153,7 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
             inliers1 = estimator.keypoints1[estimator.mask.ravel() == 1]
             inliers2 = estimator.keypoints2[estimator.mask.ravel() == 1]
 
-            sample_id = f"{scene};{row['pair']}"
+            sample_id = f"{scene};{row['im1']}-{row['im2']}"
 
             submissions_list.append([sample_id, estimated_fund, mask, inliers1, inliers2])
 
@@ -158,19 +174,47 @@ def get_keypoints_for_pair(sample_id, scene_data):
     kp2 = np.array(unpack_coords(kp2))
     return kp1, kp2
 
+def get_gt_rt_for_pair(sample_id, scene_data):
+    img1, img2 = sample_id.split(';')[-1].split('-')
+    cols = ['rotation_matrix', 'translation_vector']
 
-def evaluate_results(dataset: DatasetLoader, results: pd.DataFrame) -> pd.DataFrame:
+    R1_gt, T1_gt = scene_data.calibration.loc[img1][cols]
+    R2_gt, T2_gt = scene_data.calibration.loc[img2][cols]
+
+    return R1_gt, T1_gt.reshape((3, 1)), R2_gt, T2_gt.reshape((3, 1))
+
+def evaluate_results(dataset: DatasetLoader, results: pd.DataFrame, scaling: pd.DataFrame, thresholds_q: np.linspace, thresholds_t: np.geomspace) -> pd.DataFrame:
+    rel_list = []
     for scene in dataset.scenes_data: #find a better way to do this because I apply for all of the DF even with rows that aren't related
         print(f"Evaluating for {scene}")
         scene_data = dataset.scenes_data[scene]
+        scale = scaling.loc[scene].scaling_factor
+
         rel_results = results[results['sample_id'].str.startswith(scene)]
         if len(rel_results) == 0:
             continue
+
         rel_results[['K1', 'K2']] = rel_results['sample_id'].apply(lambda x: pd.Series(get_camera_intrinsics_for_pair(x, scene_data)))
         rel_results[['kp1', 'kp2']] = rel_results['sample_id'].apply(lambda x: pd.Series(get_keypoints_for_pair(x, scene_data)))
 
         rel_results[['E', 'R', 'T']] = rel_results.apply(lambda row: pd.Series(evu.compute_essential_matrix(np.array(row['fundamental_matrix']),
                                                 np.array(row['K1']), np.array(row['K2']), row['kp1'], row['kp2'])), axis=1)
         
-        results.update(rel_results)
+        rel_results['q'] = rel_results['R'].apply(lambda r: evu.quaternion_from_matrix(r))
+
+        rel_results[['R1_gt', 'T1_gt', 'R2_gt', 'T2_gt']] = rel_results['sample_id'].apply(lambda x: pd.Series(get_gt_rt_for_pair(x, scene_data)))
+        rel_results['dR_gt'] = rel_results.apply(lambda row: np.dot(row['R2_gt'], row['R1_gt'].T), axis=1)
+        rel_results['dT_gt'] = rel_results.apply(lambda row: (row['T2_gt'] - np.dot(row['dR_gt'], row['T1_gt'])).flatten(), axis=1)
+        rel_results['q_gt'] = rel_results['dR_gt'].apply(lambda dR_gt: evu.quaternion_from_matrix(dR_gt))
+        rel_results['q_gt'] = rel_results['q_gt'].apply(lambda q_gt: q_gt / (np.linalg.norm(q_gt) + np.finfo(float).eps))
+        
+        rel_results[['err_q', 'err_t']] = rel_results.apply(lambda row: 
+            evu.compute_error_for_pair(row['q_gt'], row['dT_gt'], row['q'], row['T'], scale), 
+            axis=1).head()
+
+        rel_list.append(rel_results)
+
+    all_rel_results = pd.concat(rel_list, axis=0)
+    results = pd.concat([results, all_rel_results[['E', 'R', 'T', 'q', 'R1_gt', 'T1_gt', 'R2_gt', 'T2_gt', 'dR_gt', 'dT_gt', 'q_gt', 'err_q', 'err_t']]], axis=1)    
+
     return results
