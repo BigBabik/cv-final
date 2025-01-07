@@ -54,18 +54,34 @@ def load_dataset(dataset_dir):
     """
     return DatasetLoader(root_dir=dataset_dir)
 
-def sample_pairs_for_run(dataset: DatasetLoader, max_pairs_per_scene: int, covisibility_threshold: float = 0.1):
+def sample_pairs_for_run(dataset: du.DatasetLoader, max_pairs_per_scene: int, covisibility_threshold: float = 0.1):
     """
     Called after preprocessing so dataset already has scenes_data populated
+    this might not be a very clever way to pick because I can sitll end up extracting keypoints for all the imgs
     """
     for scene in dataset.scenes_data:
         scene_data = dataset.scenes_data[scene]
-        valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
-        print(f'[-] Processing scene "{scene}": found {len(valid_pairs)} pairs (will keep {min(len(valid_pairs), max_pairs_per_scene)})', flush=True)
+        
+        valid_pairs_df = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold].copy()
+        valid_pairs_indices = valid_pairs_df.index.tolist()
+        
+        scene_data.covisibility.loc[:, 'for_exp'] = np.nan
 
-        random.shuffle(valid_pairs)
-        valid_pairs = valid_pairs[:max_pairs_per_scene]
-    
+        print(f'[-] Processing scene "{scene}": found {len(valid_pairs_indices)} pairs (will keep {min(len(valid_pairs_indices), max_pairs_per_scene)})', flush=True)
+
+        random.shuffle(valid_pairs_indices)
+        valid_pairs_indices = valid_pairs_indices[:max_pairs_per_scene]
+
+        scene_data.covisibility.loc[valid_pairs_indices, 'for_exp'] = 1
+        
+        sampled_df = valid_pairs_df.loc[valid_pairs_indices]
+
+        valid_imgs = set(sampled_df[['im1', 'im2']].values.flatten())
+
+        for img in scene_data.image_data:
+            if img not in valid_imgs:
+                scene_data.image_data[img].for_exp = 0
+
 
 def preprocess_data(dataset: DatasetLoader, preprocessor: ImagePreprocessor, exclude_scenes: List = []):
     """
@@ -96,9 +112,10 @@ def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
     :param dataset: The dataset containing the preprocessed images and of course the scenes loaded.
     """
     for scene in dataset.scenes_data:
-        scene_data = dataset.scenes_data[scene]
-        for img in scene_data.image_data: 
-            scene_data.image_data[img].features = extractor.extract_features(scene_data.image_data[img].preproc_contents)  
+        scene_data_imgs = dataset.scenes_data[scene].image_data
+        for img in scene_data_imgs: 
+            if scene_data_imgs[img].for_exp == 1:
+                scene_data_imgs[img].features = extractor.extract_features(scene_data_imgs[img].preproc_contents)  
 
     return dataset
 
@@ -115,6 +132,9 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
         
         # Now filter
         valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
+        if 'for_exp' in scene_data.covisibility.columns:
+            valid_pairs = valid_pairs.dropna(subset=['for_exp'])
+
         print(f"There are {len(valid_pairs)} valid pairs to estimate for")
         
         for index, row in valid_pairs.iterrows():
@@ -123,6 +143,8 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
 
             matches = matcher.match_features(img1.features, img2.features)
             valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
+            if len(kp1) < 8 or len(kp2) < 8:
+                print("[-] Not enough keypoints extracted!!!")
 
             k1n = normalize_keypoints([p.pt for p in kp1], scene_data.calibration.loc[img1.name].camera_intrinsics)
             k2n = normalize_keypoints([p.pt for p in kp2], scene_data.calibration.loc[img2.name].camera_intrinsics)
@@ -133,7 +155,7 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             # Update one row at a time - IMPLEMENT BATCH UPDATE AND SAY IF UPDATING A NULL LIST - FAILED TO MATCH
             scene_data.covisibility.loc[index, 'keypoints1'] = kp1_update
             scene_data.covisibility.loc[index, 'keypoints2'] = kp2_update
-        break
+        
 
 
 def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.FundamentalMatrixEstimator):
@@ -150,6 +172,8 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
         print(f"Estimating fundamental matrix for pairs in scene: {scene}")
 
         valid_pairs = scene_data.covisibility.dropna(subset=['keypoints1', 'keypoints2'])
+        if 'for_exp' in scene_data.covisibility.columns:
+            valid_pairs = valid_pairs.dropna(subset=['for_exp'])
 
         for index, row in valid_pairs.iterrows():
             img1 = scene_data.image_data[row['im1']]
@@ -170,8 +194,6 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
             sample_id = f"{scene};{row['im1']}-{row['im2']}"
 
             submissions_list.append([sample_id, estimated_fund, mask, inliers1, inliers2])
-
-        break
 
     return pd.DataFrame(submissions_list, columns=SUBMISSION_COLS)
 

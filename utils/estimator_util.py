@@ -63,15 +63,7 @@ class FundamentalMatrixEstimator:
         else:
             raise ValueError(f"Unsupported algorithm: {self.config.algorithm}")
         
-        self.fundamental_matrix = self.fundamental_matrix.reshape(-1) # flatten it
+        if self.fundamental_matrix is not None:
+            #raise RuntimeError(f"No fundemental matrix estimated for {self.keypoints1}, {self.keypoints2} of lengths {len(self.keypoints1)}, {len(self.keypoints2)}")
+            self.fundamental_matrix = self.fundamental_matrix.reshape(-1) # flatten it
         return self.fundamental_matrix, self.mask
-
-    def get_inliers(self):
-        if self.fundamental_matrix is None or self.mask is None:
-            raise ValueError("Fundamental matrix has not been estimated yet.")
-        
-        inliers1 = self.keypoints1[self.mask.ravel() == 1]
-        inliers2 = self.keypoints2[self.mask.ravel() == 1]
-        
-        return inliers1, inliers2
-   

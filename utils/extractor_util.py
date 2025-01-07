@@ -129,10 +129,18 @@ class FeatureMatcher:
         keypoints1 = []
         keypoints2 = []
 
-        for m, n in matches:
-            if m.distance < ratio * n.distance:
-                valid_matches.append(m)
-                keypoints1.append(features1.keypoints[m.queryIdx])
-                keypoints2.append(features2.keypoints[m.trainIdx])
+        while len(valid_matches) < 8 and ratio < 1.0:
+            valid_matches = []
+            keypoints1 = []
+            keypoints2 = []
+            for m, n in matches:
+                if m.distance < ratio * n.distance:
+                    valid_matches.append(m)
+                    keypoints1.append(features1.keypoints[m.queryIdx])
+                    keypoints2.append(features2.keypoints[m.trainIdx])
 
+            ratio += 0.05
+
+        if len(valid_matches) < 8:
+            print("FAILLLLLLLLLINGGGGG")
         return valid_matches, keypoints1, keypoints2
