@@ -179,6 +179,10 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             scene_data.covisibility.loc[index, 'keypoints1'] = kp1_update
             scene_data.covisibility.loc[index, 'keypoints2'] = kp2_update
 
+            if not dataset.train_mode:
+                scene_data.covisibility.loc[index, 'im1'] = img1.name
+                scene_data.covisibility.loc[index, 'im2'] = img2.name
+
 
 def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.FundamentalMatrixEstimator):
     """
@@ -218,6 +222,7 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
             submissions_list.append([sample_id, estimated_fund, mask, inliers1, inliers2])
 
     return pd.DataFrame(submissions_list, columns=SUBMISSION_COLS)
+
 
 def get_camera_intrinsics_for_pair(sample_id, scene_data):
     img1, img2 = sample_id.split(';')[-1].split('-')
