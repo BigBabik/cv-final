@@ -80,7 +80,6 @@ def sample_pairs_for_run(dataset: DatasetLoader, max_pairs_per_scene: int, covis
 
         random.shuffle(valid_pairs_indices)
         valid_pairs_indices = valid_pairs_indices[:max_pairs_per_scene]
-        print(valid_pairs_indices)
 
         if dataset.train_mode:
             scene_data.covisibility.loc[valid_pairs_indices, 'for_exp'] = 1
@@ -161,7 +160,6 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             img1 = scene_data.image_data[row['im1']]  # Note: row[1] to access the Series
             img2 = scene_data.image_data[row['im2']]
 
-            print(img1.name, img2.name)
             matches = matcher.match_features(img1.features, img2.features)
             valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
 
