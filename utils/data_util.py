@@ -73,7 +73,7 @@ class DatasetLoader:
         if covisibility_file.exists():
             covisibility = pd.read_csv(covisibility_file, index_col=0).set_index('pair')
         else:
-            covisibility = pd.DataFrame()  # Placeholder if covisibility data is missing
+            covisibility = pd.DataFrame(columns=['x'])  # Placeholder if covisibility data is missing
 
         scene_data = SceneData(
             images_dir=images_dir,
@@ -85,25 +85,6 @@ class DatasetLoader:
         return scene_data
     
     # -----
-
-        if self.train_mode:
-            scene_dir = self.train_dir / scene_name
-            scene_data = SceneData(
-            images_dir=scene_dir / 'images',
-            calibration=pd.read_csv(scene_dir / 'calibration.csv', index_col=0).set_index('image_id'), # will crash
-            covisibility=pd.read_csv(scene_dir / 'pair_covisibility.csv', index_col=0).set_index('pair'), # will crash
-        )
-        else:
-            scene_dir = self.test_dir / scene_name
-            scene_data = SceneData(
-            images_dir=scene_dir / 'images',
-            calibration=pd.DataFrame(),
-            covisibility=pd.DataFrame()
-            )
-
-
-        self.scenes_data[scene_name] = scene_data
-        return scene_data
     
     def get_all_scenes(self) -> List[str]:
         if self.train_mode:

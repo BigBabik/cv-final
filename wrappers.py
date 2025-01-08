@@ -60,18 +60,29 @@ def sample_pairs_for_run(dataset: DatasetLoader, max_pairs_per_scene: int, covis
     """
     for scene in dataset.scenes_data:
         scene_data = dataset.scenes_data[scene]
-        valid_pairs_df = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]#.copy()
+        if dataset.train_mode:
+            valid_pairs_df = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]#.copy()
+        else:
+            valid_pairs_df = dataset.test_samples
         valid_pairs_indices = valid_pairs_df.index.tolist()
         
-        scene_data.covisibility.loc[:, 'for_exp'] = np.nan
+        if dataset.train_mode:
+            scene_data.covisibility.loc[:, 'for_exp'] = np.nan
+
+        else:
+            dataset.test_samples.loc[:, 'for_exp'] = np.nan
         print(f'[-] Processing scene "{scene}": found {len(valid_pairs_indices)} pairs (will keep {min(len(valid_pairs_indices), max_pairs_per_scene)})', flush=True)
 
         random.shuffle(valid_pairs_indices)
         valid_pairs_indices = valid_pairs_indices[:max_pairs_per_scene]
 
-        scene_data.covisibility.loc[valid_pairs_indices, 'for_exp'] = 1
+        if dataset.train_mode:
+            scene_data.covisibility.loc[valid_pairs_indices, 'for_exp'] = 1
+            sampled_df = scene_data.covisibility.loc[valid_pairs_indices]
+        else:
+            dataset.test_samples.loc[valid_pairs_indices, 'for_exp'] = 1
+            sampled_df = dataset.test_samples.loc[valid_pairs_indices]
         
-        sampled_df = scene_data.covisibility.loc[valid_pairs_indices]
         valid_imgs = set(sampled_df[['im1', 'im2']].values.flatten())
 
         for img in scene_data.image_data:
@@ -143,9 +154,13 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             matches = matcher.match_features(img1.features, img2.features)
             valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
 
-            k1n = normalize_keypoints([p.pt for p in kp1], scene_data.calibration.loc[img1.name].camera_intrinsics)
-            k2n = normalize_keypoints([p.pt for p in kp2], scene_data.calibration.loc[img2.name].camera_intrinsics)
-
+            if not scene_data.calibration.empty:
+                k1n = normalize_keypoints([p.pt for p in kp1], scene_data.calibration.loc[img1.name].camera_intrinsics)
+                k2n = normalize_keypoints([p.pt for p in kp2], scene_data.calibration.loc[img2.name].camera_intrinsics)
+            else:
+                k1n = [p.pt for p in kp1]
+                k2n = [p.pt for p in kp2]
+            
             kp1_update = pack_coords(k1n)
             kp2_update = pack_coords(k2n)
             
