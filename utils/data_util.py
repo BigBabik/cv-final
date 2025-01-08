@@ -30,11 +30,19 @@ class DatasetLoader:
     root_dir: str
     scenes_data: Dict[str, SceneData] = field(default_factory=dict)
     train_mode: bool = True
+    test_samples: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     def __post_init__(self):
         self.root = Path(self.root_dir)
         self.train_dir = self.root / 'train'
         self.test_dir = self.root / 'test_images'
+        if not self.train_mode:
+            self.test_samples = self.load_test_samples()
+
+    def load_test_samples(self):
+        test_samples_path = self.root / 'test.csv'
+        return pd.read_csv(test_samples_path)
+
     
     def load_scene(self, scene_name: str) -> SceneData:
         scene_dir = self.train_dir / scene_name if self.train_mode else self.test_dir / scene_name

@@ -127,9 +127,12 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
         print(f"Matching features for scene: {scene}")
         
         # Now filter
-        valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
-        if 'for_exp' in scene_data.covisibility.columns:
-            valid_pairs = valid_pairs.dropna(subset=['for_exp'])
+        if dataset.train_mode:
+            valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
+            if 'for_exp' in scene_data.covisibility.columns:
+                valid_pairs = valid_pairs.dropna(subset=['for_exp'])
+        else:
+            raise NotImplementedError
 
         print(f"In matcher there are {len(valid_pairs)} valid pairs to estimate for")
         
