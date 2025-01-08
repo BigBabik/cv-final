@@ -132,7 +132,7 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             if 'for_exp' in scene_data.covisibility.columns:
                 valid_pairs = valid_pairs.dropna(subset=['for_exp'])
         else:
-            raise NotImplementedError
+            valid_pairs = dataset.test_samples
 
         print(f"In matcher there are {len(valid_pairs)} valid pairs to estimate for")
         

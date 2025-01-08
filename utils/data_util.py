@@ -41,7 +41,11 @@ class DatasetLoader:
 
     def load_test_samples(self):
         test_samples_path = self.root / 'test.csv'
-        return pd.read_csv(test_samples_path)
+        
+        test_samples = pd.read_csv(test_samples_path)
+        test_samples.rename(columns={'batch_id': 'scene_name', 'image_1_id': 'im1', 'image_2_id': 'im2'}, inplace=True)
+        
+        return test_samples
 
     
     def load_scene(self, scene_name: str) -> SceneData:
