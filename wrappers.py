@@ -136,7 +136,6 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
         for index, row in valid_pairs.iterrows():
             img1 = scene_data.image_data[row['im1']]  # Note: row[1] to access the Series
             img2 = scene_data.image_data[row['im2']]
-            print(img1.name, img2.name)
 
             matches = matcher.match_features(img1.features, img2.features)
             valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
