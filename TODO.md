@@ -2,6 +2,8 @@ General
 # what can I offload to the GPU
 # mundane functions to some general utils module
 # decouple preproc and sampling for run
+# per scene slice of tesst samples in test modes that will resolve the downstream hacks I madein branch testruns, commit deaa1fffa39f28bdc30b13874ff22fc6cda53f33
+# add tqdm for the big loops
 
 Loading and preproc
 # index_col and set_index dup in loading calibration and coves
