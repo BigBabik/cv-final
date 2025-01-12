@@ -10,6 +10,8 @@ import numpy as np
 import random
 #from utils import general_utils as gu
 from utils import evaluation_util as evu
+from tqdm import tqdm
+import time
  
 SUBMISSION_COLS = ['sample_id', 'fundamental_matrix', 'mask', 'inliers1', 'inliers2']
 
@@ -124,9 +126,9 @@ def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
     Extracts features from the preprocessed images in the dataset.
     :param dataset: The dataset containing the preprocessed images and of course the scenes loaded.
     """
-    for scene in dataset.scenes_data:
+    for scene in tqdm(dataset.scenes_data, desc="Scenes"):
         scene_data_imgs = dataset.scenes_data[scene].image_data
-        for img in scene_data_imgs: 
+        for img in tqdm(scene_data_imgs, desc="Images", leave=False):
             if scene_data_imgs[img].for_exp == 1:
                 scene_data_imgs[img].features = extractor.extract_features(scene_data_imgs[img].preproc_contents)
 
@@ -135,16 +137,54 @@ def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
 
 def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility_threshold: float = 0.1):
     """
-    Matches features between images in the dataset.
+    Matches features between images in the dataset with optimized performance.
     :param dataset: The dataset containing the images with extracted features.
     """
+    from concurrent.futures import ThreadPoolExecutor
+    import numpy as np
+    
+    def process_image_pair(args):
+        index, row, scene_data, train_mode = args
+        
+        # Cache image data access
+        img1 = scene_data.image_data[row['im1']]
+        img2 = scene_data.image_data[row['im2']]
+        
+        # Batch process matches
+        matches = matcher.match_features(img1.features, img2.features)
+        valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
+        
+        # Vectorize keypoint normalization
+        if not scene_data.calibration.empty:
+            k1_pts = np.array([p.pt for p in kp1])
+            k2_pts = np.array([p.pt for p in kp2])
+            k1n = normalize_keypoints(k1_pts, scene_data.calibration.loc[img1.name].camera_intrinsics)
+            k2n = normalize_keypoints(k2_pts, scene_data.calibration.loc[img2.name].camera_intrinsics)
+        else:
+            k1n = [p.pt for p in kp1]
+            k2n = [p.pt for p in kp2]
+        
+        result = {
+            'index': index,
+            'kp1': pack_coords(k1n),
+            'kp2': pack_coords(k2n)
+        }
+        
+        if not train_mode:
+            result.update({
+                'im1': img1.name,
+                'im2': img2.name
+            })
+            
+        return result
+
+    start_time = time.time()
     
     for scene in dataset.scenes_data:
         scene_data = dataset.scenes_data[scene]
-
         print(f"Matching features for scene: {scene}")
         
-        # Now filter
+        # Filtering logic moved outside the loop
         if dataset.train_mode:
             valid_pairs = scene_data.covisibility[scene_data.covisibility['covisibility'] > covisibility_threshold]
             if 'for_exp' in scene_data.covisibility.columns:
@@ -153,33 +193,30 @@ def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility
             valid_pairs = dataset.test_samples[dataset.test_samples['scene_name'] == scene]
             if 'for_exp' in dataset.test_samples.columns:
                 valid_pairs = valid_pairs.dropna(subset=['for_exp'])
-
+        
         print(f"In matcher there are {len(valid_pairs)} valid pairs to estimate for")
         
-        for index, row in valid_pairs.iterrows():
-            img1 = scene_data.image_data[row['im1']]  # Note: row[1] to access the Series
-            img2 = scene_data.image_data[row['im2']]
-
-            matches = matcher.match_features(img1.features, img2.features)
-            valid, kp1, kp2 = matcher.filter_lowe_matches(matches, img1.features, img2.features)
-
-            if not scene_data.calibration.empty:
-                k1n = normalize_keypoints([p.pt for p in kp1], scene_data.calibration.loc[img1.name].camera_intrinsics)
-                k2n = normalize_keypoints([p.pt for p in kp2], scene_data.calibration.loc[img2.name].camera_intrinsics)
-            else:
-                k1n = [p.pt for p in kp1]
-                k2n = [p.pt for p in kp2]
+        # Prepare batch processing arguments
+        process_args = [(index, row, scene_data, dataset.train_mode) 
+                       for index, row in valid_pairs.iterrows()]
+        
+        # Process image pairs in parallel
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = list(executor.map(process_image_pair, process_args))
+        
+        # Batch update the dataframe
+        for result in results:
+            index = result['index']
+            scene_data.covisibility.loc[index, 'keypoints1'] = result['kp1']
+            scene_data.covisibility.loc[index, 'keypoints2'] = result['kp2']
             
-            kp1_update = pack_coords(k1n)
-            kp2_update = pack_coords(k2n)
-            
-            # Update one row at a time - IMPLEMENT BATCH UPDATE AND SAY IF UPDATING A NULL LIST - FAILED TO MATCH
-            scene_data.covisibility.loc[index, 'keypoints1'] = kp1_update
-            scene_data.covisibility.loc[index, 'keypoints2'] = kp2_update
-
             if not dataset.train_mode:
-                scene_data.covisibility.loc[index, 'im1'] = img1.name
-                scene_data.covisibility.loc[index, 'im2'] = img2.name
+                scene_data.covisibility.loc[index, 'im1'] = result['im1']
+                scene_data.covisibility.loc[index, 'im2'] = result['im2']
+        
+        end_time = time.time()
+        print(f"Total time taken for matching features in scene {scene}: {end_time - start_time:.2f} seconds")
+        start_time = time.time()
 
 
 def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.FundamentalMatrixEstimator):
