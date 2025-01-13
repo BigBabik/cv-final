@@ -247,7 +247,11 @@ def estimate_fundamental_matrix(dataset: DatasetLoader, estimator: esu.Fundament
             # Estimate the fundamental matrix
             estimator.keypoints1 = kp1
             estimator.keypoints2 = kp2
-            estimated_fund, mask = estimator.estimate()
+            try:
+                estimated_fund, mask = estimator.estimate()
+            except Exception as e:
+                print(e.__traceback__)
+                continue
 
             inliers1 = estimator.keypoints1[estimator.mask.ravel() == 1]
             inliers2 = estimator.keypoints2[estimator.mask.ravel() == 1]
