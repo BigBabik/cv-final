@@ -1,8 +1,9 @@
 
 from utils import data_util as du, preproc_utils as pu, extractor_util as exu, estimator_util as esu
 from utils.data_util import ImageData, SceneData, DatasetLoader
-from utils.preproc_utils import ImagePreprocessor, PreprocessConfig
-from utils.extractor_util import FeatureExtractor, MatcherConfig, FeatureMatcher
+from utils.preproc_utils import ImagePreprocessor
+from utils.extractor_util import FeatureExtractor
+from utils.matcher_utils import FeatureMatcher
 from typing import List
 import json
 import pandas as pd
@@ -12,49 +13,11 @@ import random
 from utils import evaluation_util as evu
 from tqdm import tqdm
 import time
+from utils.general_utils import normalize_keypoints, pack_coords, unpack_coords
  
 SUBMISSION_COLS = ['sample_id', 'fundamental_matrix', 'mask', 'inliers1', 'inliers2']
 
-def normalize_keypoints(keypoints, K):
-    C_x = K[0, 2]
-    C_y = K[1, 2]
-    f_x = K[0, 0]
-    f_y = K[1, 1]
-    keypoints = (keypoints - np.array([[C_x, C_y]])) / np.array([[f_x, f_y]])
-    return keypoints
 
-def pack_coords(coord_list: List):
-    """
-    :param coord_list: list of lists of length 2 that are the normalized coords
-    """
-    return ';'.join([f"({x:.6f}, {y:.6f})" for x, y in coord_list])
-
-def unpack_coords(string_of_coords: str):
-    points = string_of_coords.split(';')
-    return ([eval(p) for p in points])
-
-def parse_config(config_file):
-    """
-    Parses the configuration file and returns the configuration objects for each stage.
-    :param config_file: The configuration file to parse.
-
-    :return: The configuration objects.
-    """
-    with open(config_file, 'r') as file:
-        config = json.load(file)
-    
-    preprocessor_config = PreprocessConfig(**config['preprocessor'])
-    return preprocessor_config
-
-
-def load_dataset(dataset_dir):
-    """
-    Loads the dataset from the specified directory.
-    :param dataset_dir: The directory containing the dataset (will be the external data directory).
-
-    :return: A DatasetLoader object containing the dataset.
-    """
-    return DatasetLoader(root_dir=dataset_dir)
 
 def sample_pairs_for_run(dataset: DatasetLoader, max_pairs_per_scene: int, covisibility_threshold: float = 0.1):
     """
@@ -96,43 +59,7 @@ def sample_pairs_for_run(dataset: DatasetLoader, max_pairs_per_scene: int, covis
         for img in scene_data.image_data:
             if img not in valid_imgs:
                 scene_data.image_data[img].for_exp = 0
-    
 
-def preprocess_data(dataset: DatasetLoader, preprocessor: ImagePreprocessor, exclude_scenes: List = []):
-    """
-    Preprocesses the data in the dataset.
-    first checks if the data has already been preprocessed, if not, preprocesses the data.
-
-    :param dataset: The datasgit et to preprocess.
-    :exclude_scenes: A list of scenes to exclude from preprocessing.
-
-    """
-    train_data = dataset.load_all_scenes()
-
-    for scene in train_data:
-        scene_data = train_data[scene]
-        for img in scene_data.images_dir.iterdir():
-            image_name = img.name.replace(img.suffix, '')
-            if scene_data.image_data is None:
-                    scene_data.image_data = {}
-
-            preprocessed_img = preprocessor.process_image(img)
-            scene_data.image_data[image_name] = du.ImageData(image_name, img, preprocessed_img)
-
-    return dataset
-
-def extract_features(dataset: DatasetLoader, extractor: FeatureExtractor):
-    """
-    Extracts features from the preprocessed images in the dataset.
-    :param dataset: The dataset containing the preprocessed images and of course the scenes loaded.
-    """
-    for scene in tqdm(dataset.scenes_data, desc="Scenes"):
-        scene_data_imgs = dataset.scenes_data[scene].image_data
-        for img in tqdm(scene_data_imgs, desc="Images", leave=False):
-            if scene_data_imgs[img].for_exp == 1:
-                scene_data_imgs[img].features = extractor.extract_features(scene_data_imgs[img].preproc_contents)
-
-    return dataset
 
 
 def match_features(dataset: DatasetLoader, matcher: FeatureMatcher, covisibility_threshold: float = 0.1):

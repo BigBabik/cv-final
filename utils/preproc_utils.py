@@ -7,26 +7,25 @@ from typing import Union, List
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
 
-@dataclass
-class PreprocessConfig:
-    size: Tuple[int, int] = (512, 512)
-    normalize: bool = True
-    greyscale: bool = False
-
 
 @dataclass
 class ImagePreprocessor:
-    config: PreprocessConfig
     num_workers: int = 4
-    
-    def process_image(self, image_path: Union[str, Path]) -> np.ndarray:
-        img = cv.imread(str(image_path))
-        img = cv.resize(img, self.config.size)
+    resize: Tuple[int, int] = (512, 512)
+    normalize: bool = True
+    greyscale: bool = True
 
-        if self.config.normalize:
+
+    def process_image(self, image_path: Union[str, Path]) -> np.ndarray:
+        
+        img = cv.imread(str(image_path))
+        if self.resize:
+            img = cv.resize(img, self.resize)
+
+        if self.normalize:
             img = img.astype(np.float32) / 255.0
         
-        if self.config.greyscale:
+        if self.greyscale:
             img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
             
         return img
