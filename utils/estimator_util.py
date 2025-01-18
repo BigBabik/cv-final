@@ -3,13 +3,13 @@ import cv2 as cv
 
 
 class RANSACConfig:
-    def __init__(self, max_iters=1000, threshold=1.0, confidence=0.99):
+    def __init__(self, max_iters=1000, threshold=1.0, confidence=0.999999):
         self.max_iters = max_iters # Maximum number of iterations to sample 8 valid points
         self.threshold = threshold 
         self.confidence = confidence 
 
 class GCRANSACCOnfig:
-    def __init__(self, max_iters=1000, threshold=1.0, confidence=0.99, max_local_optim=100, max_greedy=100):
+    def __init__(self, max_iters=1000, threshold=0.5, confidence=0.999999, max_local_optim=100, max_greedy=100):
         self.max_iters = max_iters # Maximum number of iterations to sample 8 valid points
         self.threshold = threshold
         self.confidence = confidence
@@ -17,7 +17,7 @@ class GCRANSACCOnfig:
         self.max_greedy = max_greedy
 
 class MAGSACConfig:
-    def __init__(self, max_iters=1000, threshold=1.25, confidence=0.99, sigma=1.0):
+    def __init__(self, max_iters=10000, threshold=1.25, confidence=0.999999, sigma=1.0):
         self.max_iters = max_iters # Maximum number of iterations to sample 8 valid points
         self.threshold = threshold
         self.confidence = confidence
@@ -27,9 +27,9 @@ class EstimatorConfig:
     def __init__(self, algorithm='RANSAC',RANSACConfig=None, GCRANSACCOnfig=None):
         self.algorithm = algorithm
         if algorithm == 'RANSAC':
-            self.estimator_config = RANSACConfig()
+            self.estimator_config = RANSACConfig
         elif algorithm == 'GC-RANSAC':
-            self.estimator_config = GCRANSACCOnfig()
+            self.estimator_config = GCRANSACCOnfig
         elif algorithm == 'MAGSAC':
             self.estimator_config = MAGSACConfig()
         else:

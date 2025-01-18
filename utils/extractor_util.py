@@ -9,10 +9,11 @@ class ImageFeature:
     descriptors: Optional[Tuple]
 
 class SIFTConfig:
-    nfeatures: int = 0
-    contrastThreshold: float = 0.04
-    edgeThreshold: float = 10.0
-    sigma: float = 1.6
+    def __init__(self, nfeatures: int = 0, contrastThreshold: float = 0.04, edgeThreshold: float = 10.0, sigma: float = 1.6):
+        self.nfeatures = nfeatures
+        self.contrastThreshold = contrastThreshold
+        self.edgeThreshold = edgeThreshold
+        self.sigma = sigma
 
 class FeatureExtractorConfig:
     def __init__(self, sift: Optional[SIFTConfig] = None):
@@ -111,7 +112,7 @@ class FeatureMatcher:
 
         return matches
    
-    def filter_lowe_matches(self, matches, features1: ImageFeature, features2: ImageFeature, ratio: float = 0.75):
+    def filter_lowe_matches(self, matches, features1: ImageFeature, features2: ImageFeature, ratio: float = 0.85):
         """
         Filters matches using Lowe's ratio test.
 
