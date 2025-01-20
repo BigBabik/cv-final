@@ -1,6 +1,6 @@
 import cv2 as cv
 from enum import Enum
-from utils import data_util as du, preproc_utils as pu, extractor_util as exu, estimator_util as esu, evaluation_util as evu
+from utils import extractor_util as exu
 
 class MatcherType(Enum):
     BFMatcher = 1
@@ -43,7 +43,7 @@ class FeatureMatcher:
                 self.matcher = _create_FLANN_matcher()
             case default:
                 raise ValueError("Unsupported matcher type specified in config.")
-        
+
 
     def match_features(self, features1: exu.ImageFeature, features2: exu.ImageFeature):
         """

@@ -50,7 +50,6 @@ class DatasetLoader:
         
         return test_samples
 
-    
     def _load_scene(self, scene_name: str) -> SceneData:
         scene_dir = self.train_dir / scene_name if self.train_mode else self.test_dir / scene_name
         images_dir = scene_dir / 'images' if self.train_mode else scene_dir
@@ -87,7 +86,6 @@ class DatasetLoader:
         self.scenes_data[scene_name] = scene_data
         return scene_data
     
-    
     def _get_all_scenes(self) -> List[str]:
         if self.train_mode:
             return [d.name for d in self.train_dir.iterdir() if d.is_dir()]
@@ -101,7 +99,6 @@ class DatasetLoader:
             self.scenes_data[scene] = scene_data
 
         return self.scenes_data
-
 
     def load_all_dataset(self, preprocessor: pu.ImagePreprocessor, extractor: exu.FeatureExtractor, exclude_scenes: List = []):
         print("Loading image data and metadata")
@@ -129,7 +126,6 @@ class DatasetLoader:
 
                 preprocessed_img = preprocessor.process_image(img)
                 scene_data.image_data[image_name] = ImageData(image_name, img, preprocessed_img)
-
     
     def extract_features(self, extractor: exu.FeatureExtractor):
         """
@@ -141,3 +137,7 @@ class DatasetLoader:
             for img in tqdm(scene_data_imgs, desc="Images", leave=False):
                 if scene_data_imgs[img].for_exp == 1:
                     scene_data_imgs[img].features = extractor.extract_features(scene_data_imgs[img].preproc_contents)
+
+    
+    def get_valid_pairs_to_match(self, max_pairs_per_scene, covisibility_threshold: float = 0.1):
+        pass
