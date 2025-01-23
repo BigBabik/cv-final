@@ -64,10 +64,6 @@ torch.set_grad_enabled(False)
 
 
 def process_images(input_csv, input_dir, output_dir, do_viz=True, resize=[640, 480], max_length=-1, fast_viz=True):
-    
-
-    #with open(opt.input_pairs, 'r') as f:
-        #pairs = [l.split() for l in f.readlines()]
 
     input_csv = "/share/project_data/test.csv"
     test_samples = pd.read_csv(input_csv)
