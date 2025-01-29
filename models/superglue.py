@@ -81,6 +81,7 @@ class KeypointEncoder(nn.Module):
 
     def forward(self, kpts, scores):
         inputs = [kpts.transpose(1, 2), scores.unsqueeze(1)]
+        print([x.shape for x in inputs])
         return self.encoder(torch.cat(inputs, dim=1))
 
 
@@ -231,7 +232,7 @@ class SuperGlue(nn.Module):
         """Run SuperGlue on a pair of keypoints and descriptors"""
         desc0, desc1 = data['descriptors0'], data['descriptors1']
         kpts0, kpts1 = data['keypoints0'], data['keypoints1']
-
+        
         if kpts0.shape[1] == 0 or kpts1.shape[1] == 0:  # no keypoints
             shape0, shape1 = kpts0.shape[:-1], kpts1.shape[:-1]
             return {
@@ -240,7 +241,6 @@ class SuperGlue(nn.Module):
                 'matching_scores0': kpts0.new_zeros(shape0),
                 'matching_scores1': kpts1.new_zeros(shape1),
             }
-
         # Keypoint normalization.
         kpts0 = normalize_keypoints(kpts0, data['image0'].shape)
         kpts1 = normalize_keypoints(kpts1, data['image1'].shape)
@@ -250,7 +250,7 @@ class SuperGlue(nn.Module):
         desc1 = desc1 + self.kenc(kpts1, data['scores1'])
 
         # Multi-layer Transformer network.
-        desc0, desc1 = self.gnn(desc0, desc1)
+        desc0, desc1 = self.gnn(desc0, desc1)   
 
         # Final MLP projection.
         mdesc0, mdesc1 = self.final_proj(desc0), self.final_proj(desc1)
@@ -258,12 +258,12 @@ class SuperGlue(nn.Module):
         # Compute matching descriptor distance.
         scores = torch.einsum('bdn,bdm->bnm', mdesc0, mdesc1)
         scores = scores / self.config['descriptor_dim']**.5
-
+        
         # Run the optimal transport.
         scores = log_optimal_transport(
             scores, self.bin_score,
             iters=self.config['sinkhorn_iterations'])
-
+        
         # Get the matches with score above "match_threshold".
         max0, max1 = scores[:, :-1, :-1].max(2), scores[:, :-1, :-1].max(1)
         indices0, indices1 = max0.indices, max1.indices

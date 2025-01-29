@@ -73,7 +73,6 @@ class Matching(torch.nn.Module):
         # We should either have i) one image per batch, or
         # ii) the same number of local features for all images in the batch.
         data = {**data, **pred}
-
         for k in data:
             if isinstance(data[k], (list, tuple)):
                 data[k] = torch.stack(data[k])
