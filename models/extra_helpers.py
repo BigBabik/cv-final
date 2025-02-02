@@ -9,10 +9,11 @@ from models.utils import *
 import numpy as np
 import torch
 import pandas as pd
-import cv2
+import cv2 as cv
 import os
 import matplotlib.pyplot as plt
 import matplotlib
+from tqdm import tqdm
 matplotlib.use('Agg')
 
 
@@ -55,7 +56,7 @@ def perform_task(input_csv, input_dir, output_dir, matching_config, resize=[-1, 
 
     timer = AverageTimer(newline=True)
     
-    for index, row in pairs.iterrows():  #edited - change to iter on pd
+    for index, row in tqdm(pairs.iterrows(), desc="Going over dataset"):  #edited - change to iter on pd
         name0 = row['im1'] + '.jpg' # For name
         name1 = row['im2'] + '.jpg' # for namte
         scene_name = row['scene_name']
@@ -64,14 +65,12 @@ def perform_task(input_csv, input_dir, output_dir, matching_config, resize=[-1, 
         stem0, stem1 = Path(name0).stem, Path(name1).stem
         matches_path = output_dir / '{}-{}-matches.npz'.format(stem0, stem1) # changed to - from _ 
         eval_path = output_dir / '{}-{}-evaluation.npz'.format(stem0, stem1)
-        viz_path = output_dir / '{}-{}-matches.{}'.format(stem0, stem1, "png")
 
         if matches_path.exists():
             print("Skipping")
             continue
 
         do_match = True
-
 
         # If a rotation integer is provided (e.g. from EXIF data), use it:
         if len(row) >= 5:
@@ -110,3 +109,112 @@ def perform_task(input_csv, input_dir, output_dir, matching_config, resize=[-1, 
         mkpts0 = kpts0[valid]
         mkpts1 = kpts1[matches[valid]]
         mconf = conf[valid]
+
+
+def predict_matrix_for_couple(npz_file, directory_path):
+    data = np.load(os.path.join(directory_path, npz_file)) # load cached data
+    exception = None
+
+    # Extract matches, keypoints and general info
+    matches = data['matches']
+    kpts0 = data['keypoints0']
+    kpts1 = data['keypoints1']
+    match_conf = data['match_confidence']
+
+    scene_name = data['scene_name']
+    image_name0 = npz_file.split('-')[0]
+    image_name1 = npz_file.split('-')[1]
+    
+    # Filter valid matches
+    valid = []
+    cnt = 0
+    mkpts0 = []
+    mkpts1 = []
+
+    AMOUNT = 50
+    THRESH = 0.95
+    while cnt < AMOUNT and THRESH >= 0.1:
+        mkpts0 = []
+        mkpts1 = []
+        cnt = 0
+        for i in range(len(matches)):
+            is_valid = matches[i] > -1 and match_conf[i] >= THRESH
+            if is_valid:
+                cnt += 1
+                mkpts0.append(kpts0[i])
+                mkpts1.append(kpts1[matches[i]])
+        THRESH -= 0.05
+    
+
+    mkpts0 = np.array(mkpts0)
+    mkpts1 = np.array(mkpts1)
+    
+    try:
+    # Estimate the fundamental matrix using the matched keypoints
+        F, mask = cv.findFundamentalMat(
+            mkpts0,
+            mkpts1, 
+            cv.USAC_MAGSAC, 
+            ransacReprojThreshold=0.5, # was 0.5
+            confidence=0.99999,
+            maxIters=10000)
+    except Exception as e:
+        exception = type(e).__name__
+        if len(mkpts0) <= 8:
+            #print(f"Found {len(mkpts0)}")
+            pass
+        F = None
+
+    # Append the results to the lists
+    sample = f"{scene_name};{image_name0}-{image_name1}"
+    
+    if F is not None:
+        if F.shape != (3,3):
+            print(F.shape)
+        F = F.reshape(-1)
+        F = F[:9]
+        
+    return sample, F, exception
+
+
+def create_output_file(cached_directory):
+
+    # List all files in the cache directory
+    files = os.listdir(cached_directory)
+
+    # Filter out the npz files
+    npz_files = [file for file in files if file.endswith('.npz')]
+    samples = []
+    fundamental_matrices = []
+    exception_counts = {}
+
+
+    # Iterate over all npz files
+    for npz_file in tqdm(npz_files):
+        sample, F, exp = predict_matrix_for_couple(npz_file, cached_directory)
+        samples.append(sample)
+        fundamental_matrices.append(F)
+        if exp is None:
+            continue
+        if exp in exception_counts:
+                exception_counts[exp] += 1
+        else:
+            exception_counts[exp] = 1
+            #print(exp)
+    total_errors = sum(exception_counts.values())
+    print(F"total malformed {total_errors}")
+
+    # Create a dataframe with the collected data
+    df = pd.DataFrame({
+        'sample_id': samples,
+        'fundamental_matrix': fundamental_matrices
+    })
+
+    return df
+
+def pretty_fundamental_matrix(row):
+    if row is None:
+        row = np.zeros(9) 
+    # Convert array to a space-separated string in scientific notation
+    print(type(row))
+    return " ".join(f"{num:.5e}" for num in row)
