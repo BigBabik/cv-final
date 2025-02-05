@@ -58,7 +58,7 @@ def predict_for_pair(npz_file, directory_path):
     mkpts1 = []
     THRESH = 0.7
 
-    AMOUNT = 30
+    AMOUNT = 60
     THRESH = 0.95
     while cnt < AMOUNT and THRESH >= 0.1:
         mkpts0 = []
@@ -79,22 +79,31 @@ def predict_for_pair(npz_file, directory_path):
     #valid = (matches) >= 0 & (match_conf >= THRESH)
     #mkpts0 = kpts0[valid]
     #mkpts1 = kpts1[matches[valid]]
-    try:
-    # Estimate the fundamental matrix using the matched keypoints
-        #F, mask = cv2.findFundamentalMat(np.array(mkpts0), np.array(mkpts1), cv2.FM_RANSAC, confidence=0.999999)
-        F, mask = cv.findFundamentalMat(
-            mkpts0,
-            mkpts1, 
-            cv.USAC_MAGSAC, 
-            ransacReprojThreshold=0.5, # was 0.5
-            confidence=0.99999,
-            maxIters=10000)
-    except Exception as e:
-        exception = type(e).__name__
-        if len(mkpts0) <= 8:
-            print(f"Found {len(mkpts0)}")
-        print(e)
-        F = None
+    retry = 0
+    passed = False
+    while retry < 4 and not passed:
+        try:
+        # Estimate the fundamental matrix using the matched keypoints
+            #F, mask = cv2.findFundamentalMat(np.array(mkpts0), np.array(mkpts1), cv2.FM_RANSAC, confidence=0.999999)
+            F, mask = cv.findFundamentalMat(
+                mkpts0,
+                mkpts1, 
+                cv.USAC_MAGSAC, 
+                ransacReprojThreshold=0.1, # was 0.5
+                confidence=0.3,
+                maxIters=10000)
+            passed = True
+        except Exception as e:
+            F = None
+            exception = type(e).__name__
+            if len(mkpts0) <= 8:
+                print(f"Found {len(mkpts0)}")
+                retry = 4
+                continue
+            print(e)
+            F = None
+            retry += 1
+            print(f"Retry: {retry}")
     
     
     # Extract scene name and image names

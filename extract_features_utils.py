@@ -87,6 +87,34 @@ def create_super_matching(device):
 
     return matching
 
+def check_needed_resizing(image0_path, image1_path):   
+    # resize to match sizes (edited)
+    image0 = cv2.imread(str(image0_path), cv2.IMREAD_GRAYSCALE)
+    image1 = cv2.imread(str(image1_path), cv2.IMREAD_GRAYSCALE)
+
+    image0_x, image0_y = image0.shape
+    image1_x, image1_y = image1.shape
+
+    #print(image0.shape)
+    #print(image1.shape)
+
+    if (image0.shape[0]  * image0.shape[1]) > (image1.shape[0]  * image1.shape[1]) :
+        big_img, small_img = image0, image1
+    else:
+        big_img, small_img = image1, image0
+    
+    big_h, big_w = big_img.shape
+    scale = min(big_w / small_img.shape[1], big_h / small_img.shape[0])
+    new_w = int(small_img.shape[1] * scale)
+    new_h = int(small_img.shape[0] * scale)
+
+    #print((new_h, new_w))
+    #print("########")
+    #input("wee?")
+    return (new_h, new_w)
+
+
+
 def process_superglue(
         images_directory,
         image0_name,
@@ -179,8 +207,8 @@ def process_images(
         'superpoint': {
         'descriptor_dim': 256,
         'nms_radius': 4,
-        'keypoint_threshold': 0.05, # was 0.005
-        'max_keypoints': -1,
+        'keypoint_threshold': 0.2,
+        'max_keypoints': 4000,
         'remove_borders': 4,
         },
         'superglue': {
@@ -188,9 +216,9 @@ def process_images(
         'weights': 'outdoor',
         'keypoint_encoder': [32, 64, 128, 256],
         'GNN_layers': ['self', 'cross'] * 9,
-        'sinkhorn_iterations': 100,
+        'sinkhorn_iterations': 200,
         'match_threshold': 0.5,
-        'max_keypoints': -1 
+        'max_keypoints': 4000
         }
     }
 
@@ -245,7 +273,9 @@ def process_images(
             rot0, rot1 = int(row[2]), int(row[3])
         else:
             rot0, rot1 = 0, 0
+        
 
+        #resize = check_needed_resizing(str(scene_input_dir / name0), str(scene_input_dir / name1))
         # Load the image pair.
         
         image0, inp0, scales0 = read_image(

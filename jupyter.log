@@ -1,60 +1,37 @@
-[I 2025-01-28 17:25:50.979 ServerApp] jupyter_lsp | extension was successfully linked.
-[I 2025-01-28 17:25:50.982 ServerApp] jupyter_server_terminals | extension was successfully linked.
-[W 2025-01-28 17:25:50.984 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
-[W 2025-01-28 17:25:50.986 ServerApp] ServerApp.token config is deprecated in 2.0. Use IdentityProvider.token.
-[I 2025-01-28 17:25:50.987 ServerApp] jupyterlab | extension was successfully linked.
-[I 2025-01-28 17:25:50.990 ServerApp] notebook | extension was successfully linked.
-[I 2025-01-28 17:25:51.270 ServerApp] notebook_shim | extension was successfully linked.
-[W 2025-01-28 17:25:51.290 ServerApp] All authentication is disabled.  Anyone who can connect to this server will be able to run code.
-[I 2025-01-28 17:25:51.291 ServerApp] notebook_shim | extension was successfully loaded.
-[I 2025-01-28 17:25:51.294 ServerApp] jupyter_lsp | extension was successfully loaded.
-[I 2025-01-28 17:25:51.295 ServerApp] jupyter_server_terminals | extension was successfully loaded.
-[I 2025-01-28 17:25:51.300 LabApp] JupyterLab extension loaded from /usr/local/lib/python3.10/dist-packages/jupyterlab
-[I 2025-01-28 17:25:51.301 LabApp] JupyterLab application directory is /usr/local/share/jupyter/lab
-[I 2025-01-28 17:25:51.301 LabApp] Extension Manager is 'pypi'.
-[I 2025-01-28 17:25:51.364 ServerApp] jupyterlab | extension was successfully loaded.
-[I 2025-01-28 17:25:51.367 ServerApp] notebook | extension was successfully loaded.
-[I 2025-01-28 17:25:51.368 ServerApp] Serving notebooks from local directory: /app
-[I 2025-01-28 17:25:51.368 ServerApp] Jupyter Server 2.15.0 is running at:
-[I 2025-01-28 17:25:51.368 ServerApp] http://881ec10a941f:8888/tree
-[I 2025-01-28 17:25:51.369 ServerApp]     http://127.0.0.1:8888/tree
-[I 2025-01-28 17:25:51.369 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[I 2025-01-28 17:25:51.385 ServerApp] Skipped non-installed server(s): bash-language-server, dockerfile-language-server-nodejs, javascript-typescript-langserver, jedi-language-server, julia-language-server, pyright, python-language-server, python-lsp-server, r-languageserver, sql-language-server, texlab, typescript-language-server, unified-language-server, vscode-css-languageserver-bin, vscode-html-languageserver-bin, vscode-json-languageserver-bin, yaml-language-server
-[W 2025-01-28 18:09:29.438 ServerApp] 404 GET /hub/api (e4bc005c2c2b4cd482b0b83c14442638@172.17.0.1) 22.62ms referer=None
-[I 2025-01-28 18:09:29.442 ServerApp] 302 GET / (@172.17.0.1) 0.27ms
-[W 2025-01-28 18:09:29.466 ServerApp] 404 GET /login? (020753a4d8604998aa1b7784c73b8974@172.17.0.1) 0.68ms referer=None
-[I 2025-01-28 18:09:34.329 ServerApp] Kernel started: 2b40130a-b43a-429a-99d8-5796fdc6a3ea
-[I 2025-01-28 18:09:35.033 ServerApp] Connecting to kernel 2b40130a-b43a-429a-99d8-5796fdc6a3ea.
-[I 2025-01-28 18:09:35.194 ServerApp] 302 GET / (@172.17.0.1) 1.37ms
-[I 2025-01-28 18:09:35.196 ServerApp] 302 GET / (@172.17.0.1) 0.58ms
-[W 2025-01-28 18:09:35.215 ServerApp] 404 GET /login? (dd0355608f034a0c8418b9e746c3255c@172.17.0.1) 1.19ms referer=None
-[W 2025-01-28 18:09:35.223 ServerApp] 404 GET /login? (e1eeb83581e34458a945436e2b9211f5@172.17.0.1) 0.93ms referer=None
-[W 2025-01-28 18:09:38.403 ServerApp] 404 GET /nbextensions/jupyter-js-widgets/extension.js (3df7b1cf16cb4fd780e898eb23024bdd@172.17.0.1) 1.33ms referer=None
-[W 2025-01-28 18:09:38.404 ServerApp] 404 GET /nbextensions/jupyter-js-widgets/extension.js (4c023f5b854043fe9acf962339be6c8a@172.17.0.1) 2.00ms referer=None
-[I 2025-01-28 18:47:52.374 ServerApp] Kernel restarted: 2b40130a-b43a-429a-99d8-5796fdc6a3ea
-[I 2025-01-28 18:47:52.378 ServerApp] Starting buffering for 2b40130a-b43a-429a-99d8-5796fdc6a3ea:ea25aa1c-65b1-4cb2-84be-2c85a967e24c
-[I 2025-01-28 18:47:52.382 ServerApp] Connecting to kernel 2b40130a-b43a-429a-99d8-5796fdc6a3ea.
-[I 2025-01-28 18:47:52.382 ServerApp] Restoring connection for 2b40130a-b43a-429a-99d8-5796fdc6a3ea:ea25aa1c-65b1-4cb2-84be-2c85a967e24c
-[I 2025-01-28 18:48:51.842 ServerApp] Kernel restarted: 2b40130a-b43a-429a-99d8-5796fdc6a3ea
-[I 2025-01-28 18:48:51.845 ServerApp] Starting buffering for 2b40130a-b43a-429a-99d8-5796fdc6a3ea:ea25aa1c-65b1-4cb2-84be-2c85a967e24c
-[I 2025-01-28 18:48:51.848 ServerApp] Connecting to kernel 2b40130a-b43a-429a-99d8-5796fdc6a3ea.
-[I 2025-01-28 18:48:51.848 ServerApp] Restoring connection for 2b40130a-b43a-429a-99d8-5796fdc6a3ea:ea25aa1c-65b1-4cb2-84be-2c85a967e24c
-[I 2025-01-28 18:49:18.905 ServerApp] Kernel started: 347bd6fe-2416-4d79-891f-7fa341629ff5
-[I 2025-01-28 18:49:19.243 ServerApp] Connecting to kernel 347bd6fe-2416-4d79-891f-7fa341629ff5.
-[W 2025-01-28 18:49:21.248 ServerApp] 404 GET /nbextensions/jupyter-js-widgets/extension.js (676c50900bf54e93a203d48d1adb8b72@172.17.0.1) 1.78ms referer=None
-[W 2025-01-28 18:49:21.250 ServerApp] 404 GET /nbextensions/jupyter-js-widgets/extension.js (5f789b6d6f0f4486bec4620f6e767c5e@172.17.0.1) 3.76ms referer=None
-[I 2025-01-28 18:49:27.846 ServerApp] Kernel interrupted: 347bd6fe-2416-4d79-891f-7fa341629ff5
-[I 2025-01-28 19:06:47.416 ServerApp] Kernel restarted: 347bd6fe-2416-4d79-891f-7fa341629ff5
-[I 2025-01-28 19:06:47.421 ServerApp] Starting buffering for 347bd6fe-2416-4d79-891f-7fa341629ff5:9159e717-9090-4631-a9e1-306865f5e213
-[I 2025-01-28 19:06:47.424 ServerApp] Connecting to kernel 347bd6fe-2416-4d79-891f-7fa341629ff5.
-[I 2025-01-28 19:06:47.424 ServerApp] Restoring connection for 347bd6fe-2416-4d79-891f-7fa341629ff5:9159e717-9090-4631-a9e1-306865f5e213
-[I 2025-01-28 19:07:04.535 ServerApp] Kernel interrupted: 347bd6fe-2416-4d79-891f-7fa341629ff5
-[I 2025-01-28 19:08:51.300 ServerApp] Kernel restarted: 347bd6fe-2416-4d79-891f-7fa341629ff5
-[I 2025-01-28 19:08:51.303 ServerApp] Starting buffering for 347bd6fe-2416-4d79-891f-7fa341629ff5:9159e717-9090-4631-a9e1-306865f5e213
-[I 2025-01-28 19:08:51.306 ServerApp] Connecting to kernel 347bd6fe-2416-4d79-891f-7fa341629ff5.
-[I 2025-01-28 19:08:51.307 ServerApp] Restoring connection for 347bd6fe-2416-4d79-891f-7fa341629ff5:9159e717-9090-4631-a9e1-306865f5e213
-[I 2025-01-28 19:09:03.395 ServerApp] Kernel interrupted: 347bd6fe-2416-4d79-891f-7fa341629ff5
-[I 2025-01-28 19:09:16.550 ServerApp] Kernel restarted: 2b40130a-b43a-429a-99d8-5796fdc6a3ea
-[I 2025-01-28 19:09:16.554 ServerApp] Starting buffering for 2b40130a-b43a-429a-99d8-5796fdc6a3ea:ea25aa1c-65b1-4cb2-84be-2c85a967e24c
-[I 2025-01-28 19:09:16.558 ServerApp] Connecting to kernel 2b40130a-b43a-429a-99d8-5796fdc6a3ea.
-[I 2025-01-28 19:09:16.559 ServerApp] Restoring connection for 2b40130a-b43a-429a-99d8-5796fdc6a3ea:ea25aa1c-65b1-4cb2-84be-2c85a967e24c
+[I 2025-02-05 08:50:59.559 ServerApp] jupyter_lsp | extension was successfully linked.
+[I 2025-02-05 08:50:59.561 ServerApp] jupyter_server_terminals | extension was successfully linked.
+[W 2025-02-05 08:50:59.562 LabApp] 'token' has moved from NotebookApp to ServerApp. This config will be passed to ServerApp. Be sure to update your config before our next release.
+[W 2025-02-05 08:50:59.564 ServerApp] ServerApp.token config is deprecated in 2.0. Use IdentityProvider.token.
+[I 2025-02-05 08:50:59.565 ServerApp] jupyterlab | extension was successfully linked.
+[I 2025-02-05 08:50:59.567 ServerApp] notebook | extension was successfully linked.
+[I 2025-02-05 08:50:59.861 ServerApp] notebook_shim | extension was successfully linked.
+[W 2025-02-05 08:50:59.878 ServerApp] All authentication is disabled.  Anyone who can connect to this server will be able to run code.
+[I 2025-02-05 08:50:59.878 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2025-02-05 08:50:59.881 ServerApp] jupyter_lsp | extension was successfully loaded.
+[I 2025-02-05 08:50:59.881 ServerApp] jupyter_server_terminals | extension was successfully loaded.
+[I 2025-02-05 08:50:59.886 LabApp] JupyterLab extension loaded from /usr/local/lib/python3.10/dist-packages/jupyterlab
+[I 2025-02-05 08:50:59.886 LabApp] JupyterLab application directory is /usr/local/share/jupyter/lab
+[I 2025-02-05 08:50:59.887 LabApp] Extension Manager is 'pypi'.
+[I 2025-02-05 08:50:59.946 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2025-02-05 08:50:59.948 ServerApp] notebook | extension was successfully loaded.
+[I 2025-02-05 08:50:59.948 ServerApp] Serving notebooks from local directory: /app
+[I 2025-02-05 08:50:59.949 ServerApp] Jupyter Server 2.15.0 is running at:
+[I 2025-02-05 08:50:59.949 ServerApp] http://881ec10a941f:8888/tree
+[I 2025-02-05 08:50:59.949 ServerApp]     http://127.0.0.1:8888/tree
+[I 2025-02-05 08:50:59.949 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 2025-02-05 08:50:59.961 ServerApp] Skipped non-installed server(s): bash-language-server, dockerfile-language-server-nodejs, javascript-typescript-langserver, jedi-language-server, julia-language-server, pyright, python-language-server, python-lsp-server, r-languageserver, sql-language-server, texlab, typescript-language-server, unified-language-server, vscode-css-languageserver-bin, vscode-html-languageserver-bin, vscode-json-languageserver-bin, yaml-language-server
+[W 2025-02-05 08:52:09.058 ServerApp] 404 GET /hub/api (c528aaf260344d7d9ec9f60ed7a8ac02@172.17.0.1) 19.63ms referer=None
+[I 2025-02-05 08:52:09.061 ServerApp] 302 GET / (@172.17.0.1) 0.26ms
+[W 2025-02-05 08:52:09.081 ServerApp] 404 GET /login? (77365d01ca4448589d608004288ac62e@172.17.0.1) 0.83ms referer=None
+[I 2025-02-05 08:52:13.556 ServerApp] Kernel started: 0559e229-6de6-467c-a974-dd23d1c558aa
+[I 2025-02-05 08:52:13.977 ServerApp] Connecting to kernel 0559e229-6de6-467c-a974-dd23d1c558aa.
+[I 2025-02-05 08:52:14.139 ServerApp] 302 GET / (@172.17.0.1) 0.90ms
+[I 2025-02-05 08:52:14.141 ServerApp] 302 GET / (@172.17.0.1) 2.52ms
+[I 2025-02-05 08:52:14.141 ServerApp] 302 GET / (@172.17.0.1) 2.80ms
+[I 2025-02-05 08:52:14.143 ServerApp] 302 GET / (@172.17.0.1) 0.37ms
+[W 2025-02-05 08:52:14.176 ServerApp] 404 GET /login? (1262d672de9d4bdeb88d6a44a97a87f6@172.17.0.1) 1.02ms referer=None
+[W 2025-02-05 08:52:14.177 ServerApp] 404 GET /login? (fe8f6dfb22e446bcad85136be3a3c04d@172.17.0.1) 1.77ms referer=None
+[W 2025-02-05 08:52:14.179 ServerApp] 404 GET /login? (bc3f8ad90b674f4ebcabab41d5d2d05e@172.17.0.1) 1.14ms referer=None
+[W 2025-02-05 08:52:14.179 ServerApp] 404 GET /login? (ef9c79f4e424478f9df28b60a5553d53@172.17.0.1) 1.65ms referer=None
+[W 2025-02-05 08:52:17.357 ServerApp] 404 GET /nbextensions/jupyter-js-widgets/extension.js (0702dccb8917470aa7cfc2ddfa32b3bd@172.17.0.1) 1.27ms referer=None
+[W 2025-02-05 08:52:17.359 ServerApp] 404 GET /nbextensions/jupyter-js-widgets/extension.js (6c325c57a6b44ab2806b503d55c368b0@172.17.0.1) 1.08ms referer=None
